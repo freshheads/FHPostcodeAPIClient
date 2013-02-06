@@ -1,0 +1,5 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Fri, 02 Sep 2011 23:07:39 GMT
+
+{"success":true,"resource":{"street":"Wilhelminapark","postcode":"5041EB","town":"Tilburg","latitude":51.5663166667,"longitude":5.0771925}}

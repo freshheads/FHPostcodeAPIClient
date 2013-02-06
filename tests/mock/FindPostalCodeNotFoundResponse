@@ -1,0 +1,5 @@
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Date: Fri, 02 Sep 2011 23:07:39 GMT
+
+{"success":false,"error":{"code":404,"message":"Resource not found."}}

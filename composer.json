@@ -1,0 +1,27 @@
+{
+    "name": "freshheads/postcode-api-client",
+    "type": "library",
+    "description": "Client library for the postcodeapi.nu web service.",
+    "keywords": ["postcode","api","client"],
+    "homepage": "http://www.postcodeapi.nu",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Joost Farla",
+            "email": "joost.farla@freshheads.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2",
+        "guzzle/guzzle": "3.*"
+    },
+    "autoload": {
+        "psr-0": { "FH\\PostcodeAPI": "lib/" }
+    },
+    "target-dir": "FH/PostcodeAPI",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
