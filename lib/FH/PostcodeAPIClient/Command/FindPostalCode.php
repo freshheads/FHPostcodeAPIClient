@@ -19,8 +19,7 @@ class FindPostalCode extends AbstractCommand
         $this->request = $this->client->get();
         $url = $this->request->getUrl(true)->addPath($this->get('postal_code'));
 
-        if ($this->get('house_number') !== null)
-        {
+        if ($this->get('house_number') !== null) {
             $url->addPath($this->get('house_number'));
         }
 

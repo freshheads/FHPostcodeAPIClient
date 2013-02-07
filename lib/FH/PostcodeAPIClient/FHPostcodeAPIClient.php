@@ -4,7 +4,6 @@ namespace FH\PostcodeAPIClient;
 
 use Guzzle\Common\Collection;
 use Guzzle\Service\Client;
-use Guzzle\Service\Description\ServiceDescription;
 
 /**
  * Client library for postcodeapi.nu web service.
@@ -23,10 +22,10 @@ class FHPostcodeAPIClient extends Client
      * - scheme:   URI scheme: http or https
      * - api_key:  API key
      *
-     * @param array|Collection $config Configuration data
+     * @param  array|Collection $config Configuration data
      * @return self
      */
-    static public function factory($config = array())
+    public static function factory($config = array())
     {
         $default = array(
             'base_url' => self::DEFAULT_BASE_URL,
