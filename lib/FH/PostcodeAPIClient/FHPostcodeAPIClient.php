@@ -15,7 +15,7 @@ class FHPostcodeAPIClient extends Client
     const DEFAULT_BASE_URL = '{scheme}://api.postcodeapi.nu/';
 
     /**
-     * Factory method to create a new MyServiceClient
+     * Factory method to create a new FHPostcodeAPIClient.
      *
      * The following array keys and values are available options:
      * - base_url: Base URL of web service
