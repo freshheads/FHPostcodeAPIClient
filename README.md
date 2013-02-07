@@ -1,6 +1,8 @@
 FHPostcodeAPIClient
 ===================
 
+[![Build Status](https://travis-ci.org/freshheads/FHPostcodeAPIClient.png?branch=master)](https://travis-ci.org/freshheads/FHPostcodeAPIClient)
+
 FHPostcodeAPIClient is the official PHP client library for the PostcodeAPI.nu web service.
 This library is developed by [Freshheads](http://www.freshheads.com) and will be maintained in sync with the web service itself.
 
