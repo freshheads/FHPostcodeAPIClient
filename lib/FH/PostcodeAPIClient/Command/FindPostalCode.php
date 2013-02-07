@@ -16,8 +16,6 @@ class FindPostalCode extends AbstractCommand
      */
     protected function build()
     {
-        $this->set(self::RESPONSE_PROCESSING, self::TYPE_MODEL);
-
         $this->request = $this->client->get();
         $url = $this->request->getUrl(true)->addPath($this->get('postal_code'));
 
