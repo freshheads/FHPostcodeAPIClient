@@ -43,9 +43,9 @@ class FHPostcodeAPIClient extends Client
     /**
      * {@inheritdoc}
      */
-    public function createRequest($method = RequestInterface::GET, $uri = null, $headers = null, $body = null)
+    public function createRequest($method = RequestInterface::GET, $uri = null, $headers = null, $body = null, array $options = array())
     {
-        $request = parent::createRequest($method, $uri, $headers, $body);
+        $request = parent::createRequest($method, $uri, $headers, $body, $options);
         $request->addHeader('Api-Key', $this->getConfig('api_key'));
 
         return $request;
