@@ -18,10 +18,9 @@
     "autoload": {
         "psr-0": { "FH\\PostcodeAPI": "lib/" }
     },
-    "target-dir": "FH/PostcodeAPI",
     "extra": {
         "branch-alias": {
-            "dev-master": "1.0-dev"
+            "dev-master": "1.0.x-dev"
         }
     }
 }
