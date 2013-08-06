@@ -66,7 +66,7 @@ Now you can execute the find_postal_code command on the client:
 
 ```php
 // Query the web service for postal code only
-$command = $this->client->getCommand('find_postal_code', array('postal_code' => '5041EB'));
+$command = $client->getCommand('find_postal_code', array('postal_code' => '5041EB'));
 $result = $command->execute();
 
 // Results in:
@@ -80,7 +80,7 @@ $result = $command->execute();
 //   }
 
 // To get even more accurate results, query the web service for postal code and house number
-$command = $this->client->getCommand('find_postal_code', array('postal_code' => '5041EB', 'house_number' => '19'));
+$command = $client->getCommand('find_postal_code', array('postal_code' => '5041EB', 'house_number' => '19'));
 $result = $command->execute();
 
 // Results in:
