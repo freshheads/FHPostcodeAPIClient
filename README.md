@@ -104,3 +104,7 @@ A few things to be done in the future:
 * Simplify usage without the need for the service builder.
 * Add more code examples.
 * Improve installation docs with non-Composer ways.
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/freshheads/fhpostcodeapiclient/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
