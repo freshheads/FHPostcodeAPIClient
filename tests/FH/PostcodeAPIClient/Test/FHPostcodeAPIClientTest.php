@@ -48,6 +48,16 @@ class FHPostcodeAPIClientTest extends GuzzleTestCase
         $this->assertEquals($result['house_number'], $houseNumber);
     }
 
+    public function testFindPostalCodeP4()
+    {
+        $this->setMockResponse($this->client, 'FindPostalCodeP4Response');
+
+        $command = $this->client->getCommand('find_postal_code_p4', array('postal_code' => 5041));
+        $result = $command->execute();
+
+        $this->assertTrue(isset($result['town']));
+    }
+
     /**
      * @expectedException \Guzzle\Http\Exception\ClientErrorResponseException
      */

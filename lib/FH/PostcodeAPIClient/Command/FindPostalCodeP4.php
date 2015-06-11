@@ -5,9 +5,9 @@ namespace FH\PostcodeAPIClient\Command;
 /**
  * Command to retrieve geo-information for a given postal code and housenumber (optional).
  *
- * @author Joost Farla <joost.farla@freshheads.com>
+ * @author Evert Harmeling <evert.harmeling@freshheads.com>
  */
-class FindPostalCode extends BaseApiCommand
+class FindPostalCodeP4 extends BaseApiCommand
 {
     /**
      * {@inheritdoc}
@@ -16,10 +16,7 @@ class FindPostalCode extends BaseApiCommand
     {
         $this->request = $this->client->get();
         $url = $this->request->getUrl(true)->addPath($this->get('postal_code'));
-
-        if ($this->get('house_number') !== null) {
-            $url->addPath($this->get('house_number'));
-        }
+        $url->setQuery(array('type' => 'p4'));
 
         $this->request->setUrl($url);
     }
