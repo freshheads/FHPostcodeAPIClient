@@ -13,7 +13,7 @@ use GuzzleHttp\Message\ResponseInterface;
  *
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
  */
-final class FHPostcodeAPIClient
+class FHPostcodeAPIClient
 {
     /** @var string */
     const BASE_URI = 'https://postcode-api.apiwise.nl';
