@@ -2,52 +2,143 @@
 
 namespace FH\PostcodeAPIClient;
 
-use Guzzle\Common\Collection;
-use Guzzle\Service\Client;
+use FH\PostcodeAPIClient\Exception\CouldNotParseResponseException;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Message\Request;
+use GuzzleHttp\Message\ResponseInterface;
 
 /**
- * Client library for postcodeapi.nu web service.
+ * Client library for postcodeapi.nu 2.0 web service.
  *
- * @author Joost Farla <joost.farla@freshheads.com>
+ * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
  */
-class FHPostcodeAPIClient extends Client
+final class FHPostcodeAPIClient
 {
-    const DEFAULT_BASE_URL = '{scheme}://api.postcodeapi.nu/';
+    /** @var string */
+    const BASE_URI = 'https://postcode-api.apiwise.nl';
 
     /**
-     * Factory method to create a new FHPostcodeAPIClient.
-     *
-     * The following array keys and values are available options:
-     * - base_url: Base URL of web service
-     * - scheme:   URI scheme: http or https
-     * - api_key:  API key
-     *
-     * @param  array|Collection $config Configuration data
-     * @return self
+     * @var Client
      */
-    public static function factory($config = array())
+    private $httpClient;
+
+    /**
+     * @var string
+     */
+    private $apiKey;
+
+    /**
+     * @var float
+     */
+    private $timeout;
+
+    /**
+     * @param string $apiKey        Required API key for authenticating client
+     * @param float $timeout        Timeout in seconds
+     */
+    public function __construct($apiKey, $timeout = 3.0)
     {
-        $default = array(
-            'base_url' => self::DEFAULT_BASE_URL,
-            'scheme'   => 'http'
-        );
-
-        $required = array('base_url', 'scheme', 'api_key');
-
-        $config = Collection::fromConfig($config, $default, $required);
-        $client = new self($config->get('base_url'), $config);
-
-        return $client;
+        $this->apiKey = $apiKey;
+        $this->timeout = $timeout;
     }
 
     /**
-     * {@inheritdoc}
+     * @param string|null $postcode
+     * @param string|null $number
+     * @param int $from
+     *
+     * @return \StdClass
      */
-    public function createRequest($method = RequestInterface::GET, $uri = null, $headers = null, $body = null, array $options = array())
+    public function getAddresses($postcode = null, $number = null, $from = 0)
     {
-        $request = parent::createRequest($method, $uri, $headers, $body, $options);
-        $request->addHeader('Api-Key', $this->getConfig('api_key'));
+        return $this->get('/v2/addresses/', [
+            'postcode' => $postcode,
+            'number' => $number,
+            'from' => $from
+        ]);
+    }
 
-        return $request;
+    /**
+     * @param string $id
+     *
+     * @return \StdClass
+     */
+    public function getAddresss($id)
+    {
+        return $this->get("/v2/addresses/{$id}");
+    }
+
+    /**
+     * @param string $path
+     * @param array $queryParams
+     *
+     * @return \StdClass
+     *
+     * @throws RequestException
+     */
+    private function get($path, array $queryParams = array())
+    {
+        $request = $this->createHttpRequest('GET', $path, $queryParams);
+
+        $response = $this->getHttpClient()->send($request);
+
+        return $this->parseResponse($response);
+    }
+
+    /**
+     * @param ResponseInterface $response
+     *
+     * @return \StdClass
+     *
+     * @throws CouldNotParseResponseException
+     */
+    private function parseResponse(ResponseInterface $response)
+    {
+        $out = json_decode((string) $response->getBody(), false, 512, JSON_BIGINT_AS_STRING);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new CouldNotParseResponseException('Could not parse resonse', $response);
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param string $method
+     * @param string $path
+     * @param array $queryParams
+     *
+     * @return Request
+     */
+    private function createHttpRequest($method, $path, array $queryParams = array())
+    {
+        $path = $path . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
+
+        return $this->getHttpClient()->createRequest($method, $path, [
+            'headers' => [
+                'X-Api-Key' => $this->apiKey
+            ]
+        ]);
+    }
+
+    /**
+     * @return Client
+     */
+    private function getHttpClient()
+    {
+        if ($this->httpClient instanceof Client) {
+            return $this->httpClient;
+        }
+
+        $this->httpClient = new Client([
+            'base_url' => self::BASE_URI,
+            'timeout' => $this->timeout,
+            'headers' => [
+                'X-Api-Key' => $this->apiKey
+            ]
+        ]);
+
+        return $this->httpClient;
     }
 }
