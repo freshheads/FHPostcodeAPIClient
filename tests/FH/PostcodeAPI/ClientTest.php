@@ -1,14 +1,14 @@
 <?php
 
-namespace FH\PostcodeAPIClient\Test;
+namespace FH\PostcodeAPI\Test;
 
-use FH\PostcodeAPIClient\FHPostcodeAPIClient;
+use FH\PostcodeAPI\Client;
 use GuzzleHttp\Exception\RequestException;
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
  */
-final class FHPostcodeAPIClientTest extends \PHPUnit_Framework_TestCase
+final class ClientTest extends \PHPUnit_Framework_TestCase
 {
     /** @var string */
     const POSTCODE_PATTERN = '/^[\d]{4}[\w]{2}$/i';
@@ -156,19 +156,19 @@ final class FHPostcodeAPIClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @return FHPostcodeAPIClient
+     * @return Client
      */
     private function createClientWithInvalidApiKey()
     {
-        return new FHPostcodeAPIClient('InvalidApiKey');
+        return new Client('InvalidApiKey');
     }
 
     /**
-     * @return FHPostcodeAPIClient
+     * @return Client
      */
     private function createClientWithValidAPIKey()
     {
         //@todo replace api key with dev key
-        return new FHPostcodeAPIClient('vz4eAmPNAt5RVCF2vI2Fc32HfscqMNK7ytvYcEq8');
+        return new Client('vz4eAmPNAt5RVCF2vI2Fc32HfscqMNK7ytvYcEq8');
     }
 }

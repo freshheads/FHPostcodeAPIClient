@@ -2,7 +2,7 @@
 
 <phpunit bootstrap="./tests/bootstrap.php" colors="true">
     <testsuites>
-        <testsuite name="FHPostcodeAPIClient">
+        <testsuite name="Client">
             <directory suffix="Test.php">./tests</directory>
         </testsuite>
     </testsuites>
@@ -16,5 +16,4 @@
             </exclude>
         </whitelist>
     </filter>
-
 </phpunit>

@@ -1,6 +1,6 @@
 <?php
 
-namespace FH\PostcodeAPIClient\Exception;
+namespace FH\PostcodeAPI\Exception;
 
 use GuzzleHttp\Message\ResponseInterface;
 

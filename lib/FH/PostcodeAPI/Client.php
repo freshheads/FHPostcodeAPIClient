@@ -1,9 +1,9 @@
 <?php
 
-namespace FH\PostcodeAPIClient;
+namespace FH\PostcodeAPI;
 
-use FH\PostcodeAPIClient\Exception\CouldNotParseResponseException;
-use GuzzleHttp\Client;
+use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
+use GuzzleHttp\Client as HTTPClient;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Message\Request;
 use GuzzleHttp\Message\ResponseInterface;
@@ -13,13 +13,13 @@ use GuzzleHttp\Message\ResponseInterface;
  *
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
  */
-class FHPostcodeAPIClient
+class Client
 {
     /** @var string */
     const BASE_URI = 'https://postcode-api.apiwise.nl';
 
     /**
-     * @var Client
+     * @var HTTPClient
      */
     private $httpClient;
 
@@ -123,15 +123,15 @@ class FHPostcodeAPIClient
     }
 
     /**
-     * @return Client
+     * @return HTTPClient
      */
     private function getHttpClient()
     {
-        if ($this->httpClient instanceof Client) {
+        if ($this->httpClient instanceof HTTPClient) {
             return $this->httpClient;
         }
 
-        $this->httpClient = new Client([
+        $this->httpClient = new HTTPClient([
             'base_url' => self::BASE_URI,
             'timeout' => $this->timeout,
             'headers' => [
