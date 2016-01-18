@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 873
+Connection: close
+Date: Mon, 18 Jan 2016 13:52:36 GMT
+Access-Control-Allow-Origin: *
+x-amzn-RequestId: bafc1e2e-bdea-11e5-90f0-1b90455a260f
+X-Cache: Miss from cloudfront
+Via: 1.1 a134c11b92581b89f9f50f8cb5a098cf.cloudfront.net (CloudFront)
+X-Amz-Cf-Id: 1tRygkZwql84h2jr8ZHfz_4vg4ACRnSsowyddHkB4Wpj3WbLXVk-Zw==
+
+{"_embedded":{"addresses":[{"city":{"id":"1043","label":"Tilburg"},"letter":null,"id":"0855200000061001","purpose":"woonfunctie","postcode":"5041EB","municipality":{"id":"0855","label":"Tilburg"},"nen5825":{"street":"WILHELMINAPARK","postcode":"5041 EB"},"street":"Wilhelminapark","number":21,"province":{"id":"30","label":"Noord-Brabant"},"addition":null,"geo":{"center":{"wgs84":{"crs":{"properties":{"name":"urn:ogc:def:crs:OGC:1.3:CRS84"},"type":"name"},"type":"Point","coordinates":[5.07717893166,51.566414786]},"rd":{"crs":{"properties":{"name":"urn:ogc:def:crs:EPSG::28992"},"type":"name"},"type":"Point","coordinates":[133504.577,397543.03]}}},"type":"Verblijfsobject","_links":{"self":{"href":"https://postcode-api.apiwise.nl/v2/addresses/0855200000061001/"}}}]},"_links":{"self":{"href":"https://postcode-api.apiwise.nl/v2/addresses/?postcode=5041EB&number=21"}}}
