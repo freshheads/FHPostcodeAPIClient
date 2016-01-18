@@ -34,7 +34,7 @@ Instantiate the client and replace the API key with your personal credentials:
 ```php
 // initiate client
 $apiKey = 'replace_with_your_own_api_key';
-$client = new FHPostcodeAPIClient($apiKey);
+$client = new FHPostcodeAPIClient(new \GuzzleHttp\Client(), $apiKey);
 
 // call endpoints
 $response = $client->getAddresses('5041EB', 21);

@@ -4,6 +4,7 @@ namespace FH\PostcodeAPI;
 
 use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
 use GuzzleHttp\Client as HTTPClient;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Message\Request;
 use GuzzleHttp\Message\ResponseInterface;
@@ -24,23 +25,29 @@ class Client
     private $httpClient;
 
     /**
-     * @var string
+     * @param ClientInterface $httpClient
+     * @param string $apiKey Required API key for authenticating client
      */
-    private $apiKey;
-
-    /**
-     * @var float
-     */
-    private $timeout;
-
-    /**
-     * @param string $apiKey        Required API key for authenticating client
-     * @param float $timeout        Timeout in seconds
-     */
-    public function __construct($apiKey, $timeout = 3.0)
+    public function __construct(ClientInterface $httpClient, $apiKey)
     {
-        $this->apiKey = $apiKey;
-        $this->timeout = $timeout;
+        $this->httpClient = $this->prepareClient($httpClient, $apiKey);
+    }
+
+    /**
+     * @param ClientInterface $client
+     * @param string $apiKey
+     *
+     * @return HTTPClient
+     */
+    private function prepareClient(ClientInterface $client, $apiKey)
+    {
+        if ($client->getDefaultOption('timeout') === null) {
+            $client->setDefaultOption('timeout', 5.0);
+        }
+
+        $client->setDefaultOption('headers/X-Api-Key', $apiKey);
+
+        return $client;
     }
 
     /**
@@ -79,9 +86,11 @@ class Client
      */
     private function get($path, array $queryParams = array())
     {
-        $request = $this->createHttpRequest('GET', $path, $queryParams);
+        $url = self::BASE_URI . $path;
 
-        $response = $this->getHttpClient()->send($request);
+        $request = $this->createHttpRequest('GET', $url, $queryParams);
+
+        $response = $this->httpClient->send($request);
 
         return $this->parseResponse($response);
     }
@@ -115,30 +124,6 @@ class Client
     {
         $path = $path . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
 
-        return $this->getHttpClient()->createRequest($method, $path, [
-            'headers' => [
-                'X-Api-Key' => $this->apiKey
-            ]
-        ]);
-    }
-
-    /**
-     * @return HTTPClient
-     */
-    private function getHttpClient()
-    {
-        if ($this->httpClient instanceof HTTPClient) {
-            return $this->httpClient;
-        }
-
-        $this->httpClient = new HTTPClient([
-            'base_url' => self::BASE_URI,
-            'timeout' => $this->timeout,
-            'headers' => [
-                'X-Api-Key' => $this->apiKey
-            ]
-        ]);
-
-        return $this->httpClient;
+        return $this->httpClient->createRequest($method, $path);
     }
 }

@@ -4,6 +4,8 @@ namespace FH\PostcodeAPI\Test;
 
 use FH\PostcodeAPI\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Client AS HTTPClient;
+use GuzzleHttp\Message\Response;
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
@@ -40,7 +42,11 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
 
             $this->fail('Should not get to this point as an exception should have been thrown because the api client was supplied with an invalid API key');
         } catch (RequestException $exception) {
-            $this->assertTrue($exception->getResponse()->getStatusCode() === 401);
+            if ($exception->getResponse() instanceof Response) {
+                $this->assertTrue($exception->getResponse()->getStatusCode() === 401);
+            } else {
+                $this->fail($exception->getMessage());
+            }
         }
     }
 
@@ -160,7 +166,7 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
      */
     private function createClientWithInvalidApiKey()
     {
-        return new Client('InvalidApiKey');
+        return new Client(new HTTPClient(), 'InvalidApiKey');
     }
 
     /**
@@ -169,6 +175,6 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     private function createClientWithValidAPIKey()
     {
         //@todo replace api key with dev key
-        return new Client('vz4eAmPNAt5RVCF2vI2Fc32HfscqMNK7ytvYcEq8');
+        return new Client(new HTTPClient(), 'vz4eAmPNAt5RVCF2vI2Fc32HfscqMNK7ytvYcEq8');
     }
 }
