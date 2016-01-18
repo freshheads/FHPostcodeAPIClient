@@ -9,6 +9,10 @@
         {
             "name": "Joost Farla",
             "email": "joost.farla@freshheads.com"
+        },
+        {
+            "name": "Gijs Nieuwenhuis",
+            "email": "gijs.nieuwenhuis@freshheads.com"
         }
     ],
     "require": {
