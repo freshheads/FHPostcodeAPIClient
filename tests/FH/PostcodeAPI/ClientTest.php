@@ -6,6 +6,7 @@ use FH\PostcodeAPI\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Client AS HTTPClient;
 use GuzzleHttp\Message\Response;
+use GuzzleHttp\Subscriber\Mock;
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
@@ -35,7 +36,9 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
 
     public function testRequestExceptionIsThrownWhenUsingAnInvalidApiKey()
     {
-        $client = $this->createClientWithInvalidApiKey();
+        $client = $this->createClient(
+            $this->loadMockResponse('failed_list_with_invalid_api_key')
+        );
 
         try {
             $client->getAddresses();
@@ -50,9 +53,11 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    public function testAddressesResourceReturnsAllAddressesWhenNoParamsAreSupplied()
+    public function testListResourceReturnsAllAddressesWhenNoParamsAreSupplied()
     {
-        $client = $this->createClientWithValidAPIKey();
+        $client = $this->createClient(
+            $this->loadMockResponse('successful_list_without_filtering')
+        );
 
         $response = $client->getAddresses();
 
@@ -65,9 +70,11 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
         $this->applyAddressFieldAreSetAndOfTheCorrectTypeAssertions($addresses[0]);
     }
 
-    public function testAddressesResourceReturnsExpectedAddressWhenPostcodeAndNumberAreSupplied()
+    public function testListResourceReturnsExpectedAddressWhenPostcodeAndNumberAreSupplied()
     {
-        $client = $this->createClientWithValidAPIKey();
+        $client = $this->createClient(
+            $this->loadMockResponse('successful_list_freshheads_postcode_and_number')
+        );
 
         $response = $client->getAddresses(self::FRESHHEADS_POSTCODE, self::FRESHHEADS_NUMBER);
 
@@ -83,9 +90,11 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
         $this->applyIsFreshheadsAddressAssertions($firstAddress);
     }
 
-    public function testExpectedAddressInformationIsReturnedFromAddressResource()
+    public function testExpectedAddressInformationIsReturnedFromDetailResource()
     {
-        $client = $this->createClientWithValidAPIKey();
+        $client = $this->createClient(
+            $this->loadMockResponse('successful_detail_freshheads')
+        );
 
         $address = $client->getAddresss(self::FRESHHEADS_ADDRESS_ID);
 
@@ -99,9 +108,21 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testClientThrowsExceptionWhenInvalidInputIsSupplied()
     {
-        $client = $this->createClientWithValidAPIKey();
+        $client = $this->createClient(
+            $this->loadMockResponse('failed_list_with_invalid_postalcode_and_number')
+        );
 
         $client->getAddresses('invalid_postcode', 'invalid_number');
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return string
+     */
+    private function loadMockResponse($name)
+    {
+        return file_get_contents(__DIR__ . "/../../Mock/{$name}");
     }
 
     /**
@@ -162,19 +183,22 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @param string $mockedResponses
+     *
      * @return Client
      */
-    private function createClientWithInvalidApiKey()
+    private function createClient($mockedResponses)
     {
-        return new Client(new HTTPClient(), 'InvalidApiKey');
-    }
+        $someKey = 'SomeApiKey';
 
-    /**
-     * @return Client
-     */
-    private function createClientWithValidAPIKey()
-    {
-        //@todo replace api key with dev key
-        return new Client(new HTTPClient(), 'vz4eAmPNAt5RVCF2vI2Fc32HfscqMNK7ytvYcEq8');
+        $httpClient = new HTTPClient();
+
+        $httpClient->getEmitter()->attach(
+            new Mock([
+                $mockedResponses
+            ])
+        );
+
+        return new Client($httpClient, $someKey);
     }
 }

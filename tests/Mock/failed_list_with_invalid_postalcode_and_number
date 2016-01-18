@@ -1,0 +1,14 @@
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+Content-Length: 49
+Connection: close
+Date: Mon, 18 Jan 2016 14:09:26 GMT
+Access-Control-Allow-Origin: *
+x-amzn-RequestId: 14e8ad6b-bded-11e5-8468-f508f29a5d3d
+X-Cache: Error from cloudfront
+Via: 1.1 9b2d149ed73388c68a54b134bfe81238.cloudfront.net (CloudFront)
+X-Amz-Cf-Id: MbOPfaH9KXJbRFzOKSF7kHrbwCVDSXtDFpW5HRUxnc5NDYiC0FoaAQ==
+
+{
+  "error": "An unknown server error occured."
+}
