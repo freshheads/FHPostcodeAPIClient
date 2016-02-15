@@ -104,7 +104,7 @@ class Client
      */
     private function parseResponse(ResponseInterface $response)
     {
-        $out = json_decode((string) $response->getBody(), false, 512);
+        $out = json_decode((string) $response->getBody());
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new CouldNotParseResponseException('Could not parse resonse', $response);
