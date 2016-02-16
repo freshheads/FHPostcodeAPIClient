@@ -96,7 +96,7 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
             $this->loadMockResponse('successful_detail_freshheads')
         );
 
-        $address = $client->getAddresss(self::FRESHHEADS_ADDRESS_ID);
+        $address = $client->getAddress(self::FRESHHEADS_ADDRESS_ID);
 
         $this->applyAddressFieldAreSetAndOfTheCorrectTypeAssertions($address);
 
