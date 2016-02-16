@@ -71,7 +71,7 @@ class Client
      *
      * @return \StdClass
      */
-    public function getAddresss($id)
+    public function getAddress($id)
     {
         return $this->get("/v2/addresses/{$id}");
     }
