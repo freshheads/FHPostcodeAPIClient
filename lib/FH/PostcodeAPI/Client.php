@@ -6,8 +6,8 @@ use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
 use GuzzleHttp\Client as HTTPClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Message\Request;
-use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Client library for postcodeapi.nu 2.0 web service.
@@ -16,7 +16,6 @@ use GuzzleHttp\Message\ResponseInterface;
  */
 class Client
 {
-    /** @var string */
     const BASE_URI = 'https://postcode-api.apiwise.nl';
 
     /**
@@ -24,30 +23,9 @@ class Client
      */
     private $httpClient;
 
-    /**
-     * @param ClientInterface $httpClient
-     * @param string $apiKey Required API key for authenticating client
-     */
-    public function __construct(ClientInterface $httpClient, $apiKey)
+    public function __construct(ClientInterface $httpClient)
     {
-        $this->httpClient = $this->prepareClient($httpClient, $apiKey);
-    }
-
-    /**
-     * @param ClientInterface $client
-     * @param string $apiKey
-     *
-     * @return HTTPClient
-     */
-    private function prepareClient(ClientInterface $client, $apiKey)
-    {
-        if ($client->getDefaultOption('timeout') === null) {
-            $client->setDefaultOption('timeout', 5.0);
-        }
-
-        $client->setDefaultOption('headers/X-Api-Key', $apiKey);
-
-        return $client;
+        $this->httpClient = $httpClient;
     }
 
     /**
@@ -107,7 +85,7 @@ class Client
         $out = json_decode((string) $response->getBody());
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new CouldNotParseResponseException('Could not parse resonse', $response);
+            throw new CouldNotParseResponseException('Could not parse repsonse', $response);
         }
 
         return $out;
@@ -115,15 +93,15 @@ class Client
 
     /**
      * @param string $method
-     * @param string $path
+     * @param string $url
      * @param array $queryParams
      *
      * @return Request
      */
-    private function createHttpRequest($method, $path, array $queryParams = array())
+    private function createHttpRequest($method, $url, array $queryParams = array())
     {
-        $path = $path . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
+        $url = $url . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
 
-        return $this->httpClient->createRequest($method, $path);
+        return new Request($method, $url);
     }
 }
