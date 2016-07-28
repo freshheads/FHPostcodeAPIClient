@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.1.0
+
+* Added `getPostcodes()` call, to get postcodes based on provided `latitude, longitude`. Note that this call is only available with a premium account.
+
 ## 2.0.0
 
 * Rewrite to support postcodeapi.nu version 2
