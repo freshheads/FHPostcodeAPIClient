@@ -41,6 +41,9 @@ $client = new \FH\PostcodeAPI\Client(new \GuzzleHttp\Client(), $apiKey);
 // call endpoints
 $response = $client->getAddresses('5041EB', 21);
 $response = $client->getAddress('0855200000061001');
+
+// Note that this call is only available with a premium account
+$response = $client->getPostcodes('51.566405', '5.077171');
 ```
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/freshheads/fhpostcodeapiclient/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
