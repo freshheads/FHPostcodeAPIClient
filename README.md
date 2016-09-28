@@ -14,8 +14,7 @@ by [Freshheads](https://www.freshheads.com) and will be maintained in sync with 
 Requirements
 ------------
 
-FHPostcodeAPIClient works with PHP 5.4.0 or up. This library is dependent on the awesome [Guzzle](http://guzzlephp.org/) HTTP client library. Guzzle 5 
-version is used instead of the new Guzzle 6, as Guzzle 6 requires the php version to be higher than 5.5.0.
+FHPostcodeAPIClient works with PHP 5.4.0 or up. This library is dependent on the awesome [Guzzle](http://guzzlephp.org/) HTTP client library. 
 
 Installation
 ------------
@@ -42,6 +41,9 @@ $client = new \FH\PostcodeAPI\Client(new \GuzzleHttp\Client(), $apiKey);
 // call endpoints
 $response = $client->getAddresses('5041EB', 21);
 $response = $client->getAddress('0855200000061001');
+
+// Note that this call is only available with a premium account
+$response = $client->getPostcodes('51.566405', '5.077171');
 ```
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/freshheads/fhpostcodeapiclient/trend.png)](https://bitdeli.com/free "Bitdeli Badge")

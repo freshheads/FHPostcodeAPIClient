@@ -6,8 +6,8 @@ use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
 use GuzzleHttp\Client as HTTPClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Message\Request;
-use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Client library for postcodeapi.nu 2.0 web service.
@@ -16,38 +16,36 @@ use GuzzleHttp\Message\ResponseInterface;
  */
 class Client
 {
-    /** @var string */
-    const BASE_URI = 'https://postcode-api.apiwise.nl';
+    const POSTCODES_SORT_DISTANCE = 'distance';
+
+    /**
+     * @var string
+     */
+    private $uriScheme  = 'https://';
+
+    /**
+     * @var null|string
+     */
+    private $domain     = 'postcode-api.apiwise.nl';
+
+    /**
+     * @var string
+     */
+    private $version    = 'v2';
 
     /**
      * @var HTTPClient
      */
     private $httpClient;
 
-    /**
-     * @param ClientInterface $httpClient
-     * @param string $apiKey Required API key for authenticating client
-     */
-    public function __construct(ClientInterface $httpClient, $apiKey)
-    {
-        $this->httpClient = $this->prepareClient($httpClient, $apiKey);
-    }
 
-    /**
-     * @param ClientInterface $client
-     * @param string $apiKey
-     *
-     * @return HTTPClient
-     */
-    private function prepareClient(ClientInterface $client, $apiKey)
+    public function __construct(ClientInterface $httpClient, $domain = null)
     {
-        if ($client->getDefaultOption('timeout') === null) {
-            $client->setDefaultOption('timeout', 5.0);
+        if (null !== $domain) {
+            $this->domain = $domain;
         }
 
-        $client->setDefaultOption('headers/X-Api-Key', $apiKey);
-
-        return $client;
+        $this->httpClient = $httpClient;
     }
 
     /**
@@ -55,11 +53,11 @@ class Client
      * @param string|null $number
      * @param int $from
      *
-     * @return \StdClass
+     * @return \stdClass
      */
     public function getAddresses($postcode = null, $number = null, $from = 0)
     {
-        return $this->get('/v2/addresses/', [
+        return $this->get('/addresses/', [
             'postcode' => $postcode,
             'number' => $number,
             'from' => $from
@@ -69,26 +67,44 @@ class Client
     /**
      * @param string $id
      *
-     * @return \StdClass
+     * @return \stdClass
      */
     public function getAddress($id)
     {
-        return $this->get("/v2/addresses/{$id}");
+        return $this->get(sprintf('/addresses/%s', $id));
+    }
+
+    /**
+     * @param string $latitude
+     * @param string $longitude
+     * @param string $sort
+     *
+     * @return \stdClass
+     */
+    public function getPostcodesByCoordinates($latitude, $longitude, $sort = self::POSTCODES_SORT_DISTANCE)
+    {
+        return $this->get('/postcodes/', [
+            'coords' => [
+                'latitude' => $latitude,
+                'longitude' => $longitude
+            ],
+            'sort' => $sort
+        ]);
     }
 
     /**
      * @param string $path
      * @param array $queryParams
      *
-     * @return \StdClass
+     * @return \stdClass
      *
      * @throws RequestException
      */
     private function get($path, array $queryParams = array())
     {
-        $url = self::BASE_URI . $path;
-
-        $request = $this->createHttpRequest('GET', $url, $queryParams);
+        $request = $this->createHttpRequest('GET', sprintf('%s%s/%s%s', $this->uriScheme, $this->domain, $this->version, $path),
+            $queryParams
+        );
 
         $response = $this->httpClient->send($request);
 
@@ -98,7 +114,7 @@ class Client
     /**
      * @param ResponseInterface $response
      *
-     * @return \StdClass
+     * @return \stdClass
      *
      * @throws CouldNotParseResponseException
      */
@@ -107,7 +123,7 @@ class Client
         $out = json_decode((string) $response->getBody());
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new CouldNotParseResponseException('Could not parse resonse', $response);
+            throw new CouldNotParseResponseException('Could not parse response', $response);
         }
 
         return $out;
@@ -115,15 +131,15 @@ class Client
 
     /**
      * @param string $method
-     * @param string $path
+     * @param string $url
      * @param array $queryParams
      *
      * @return Request
      */
-    private function createHttpRequest($method, $path, array $queryParams = array())
+    private function createHttpRequest($method, $url, array $queryParams = array())
     {
-        $path = $path . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
+        $url = $url . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
 
-        return $this->httpClient->createRequest($method, $path);
+        return new Request($method, $url);
     }
 }
