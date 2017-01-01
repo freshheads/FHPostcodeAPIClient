@@ -5,9 +5,8 @@ namespace FH\PostcodeAPI;
 use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
 use GuzzleHttp\Client as HTTPClient;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Message\Request;
-use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\Response;
 
 /**
  * Client library for postcodeapi.nu 2.0 web service.
@@ -18,6 +17,12 @@ class Client
 {
     /** @var string */
     const BASE_URI = 'https://postcode-api.apiwise.nl';
+
+    /** @var float */
+    const TIMEOUT = 5.0;
+
+    /** @var string */
+    private $apiKey;
 
     /**
      * @var HTTPClient
@@ -30,24 +35,8 @@ class Client
      */
     public function __construct(ClientInterface $httpClient, $apiKey)
     {
-        $this->httpClient = $this->prepareClient($httpClient, $apiKey);
-    }
-
-    /**
-     * @param ClientInterface $client
-     * @param string $apiKey
-     *
-     * @return HTTPClient
-     */
-    private function prepareClient(ClientInterface $client, $apiKey)
-    {
-        if ($client->getDefaultOption('timeout') === null) {
-            $client->setDefaultOption('timeout', 5.0);
-        }
-
-        $client->setDefaultOption('headers/X-Api-Key', $apiKey);
-
-        return $client;
+        $this->apiKey = $apiKey;
+        $this->httpClient = $httpClient;
     }
 
     /**
@@ -82,27 +71,30 @@ class Client
      *
      * @return \StdClass
      *
-     * @throws RequestException
+     * @throws GuzzleException
      */
     private function get($path, array $queryParams = array())
     {
         $url = self::BASE_URI . $path;
+        $options = [
+            'headers' => ['X-Api-Key' => $this->apiKey],
+            'timeout' => self::TIMEOUT,
+            'query' => $queryParams
+        ];
 
-        $request = $this->createHttpRequest('GET', $url, $queryParams);
-
-        $response = $this->httpClient->send($request);
+        $response = $this->httpClient->request('GET', $url, $options);
 
         return $this->parseResponse($response);
     }
 
     /**
-     * @param ResponseInterface $response
+     * @param Response $response
      *
      * @return \StdClass
      *
      * @throws CouldNotParseResponseException
      */
-    private function parseResponse(ResponseInterface $response)
+    private function parseResponse(Response $response)
     {
         $out = json_decode((string) $response->getBody());
 
@@ -111,19 +103,5 @@ class Client
         }
 
         return $out;
-    }
-
-    /**
-     * @param string $method
-     * @param string $path
-     * @param array $queryParams
-     *
-     * @return Request
-     */
-    private function createHttpRequest($method, $path, array $queryParams = array())
-    {
-        $path = $path . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
-
-        return $this->httpClient->createRequest($method, $path);
     }
 }

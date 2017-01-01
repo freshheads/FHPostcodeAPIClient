@@ -3,10 +3,13 @@
 namespace FH\PostcodeAPI\Test;
 
 use FH\PostcodeAPI\Client;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Client AS HTTPClient;
-use GuzzleHttp\Message\Response;
-use GuzzleHttp\Subscriber\Mock;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Request;
+
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
@@ -118,11 +121,11 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     /**
      * @param string $name
      *
-     * @return string
+     * @return Response
      */
     private function loadMockResponse($name)
     {
-        return file_get_contents(__DIR__ . "/../../Mock/{$name}");
+        return \GuzzleHttp\Psr7\parse_response(file_get_contents(__DIR__ . "/../../Mock/{$name}"));
     }
 
     /**
@@ -183,21 +186,17 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param string $mockedResponses
+     * @param Response $mockedResponse
      *
      * @return Client
      */
-    private function createClient($mockedResponses)
+    private function createClient(Response $mockedResponse)
     {
         $someKey = 'SomeApiKey';
 
-        $httpClient = new HTTPClient();
-
-        $httpClient->getEmitter()->attach(
-            new Mock([
-                $mockedResponses
-            ])
-        );
+        $mock = new MockHandler([$mockedResponse]);
+        $handler = HandlerStack::create($mock);
+        $httpClient = new HTTPClient(['handler' => $handler]);
 
         return new Client($httpClient, $someKey);
     }
