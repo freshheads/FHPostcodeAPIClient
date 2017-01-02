@@ -14,8 +14,7 @@ by [Freshheads](https://www.freshheads.com) and will be maintained in sync with 
 Requirements
 ------------
 
-FHPostcodeAPIClient works with PHP 5.4.0 or up. This library is dependent on the awesome [Guzzle](http://guzzlephp.org/) HTTP client library. Guzzle 5 
-version is used instead of the new Guzzle 6, as Guzzle 6 requires the php version to be higher than 5.5.0.
+FHPostcodeAPIClient works with PHP 5.5 or up. This library is dependent on the awesome [Guzzle](http://guzzlephp.org/) HTTP client library.
 
 Installation
 ------------
