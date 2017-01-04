@@ -3,10 +3,7 @@
 namespace FH\PostcodeAPI\Test;
 
 use FH\PostcodeAPI\Client;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Client AS HTTPClient;
-use GuzzleHttp\Message\Response;
-use GuzzleHttp\Subscriber\Mock;
+use GuzzleHttp\Psr7\Response;
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
@@ -34,23 +31,16 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     /** @var string */
     const FRESHHEADS_ADDRESS_ID = '0855200000061001';
 
+    /**
+     * @expectedException FH\PostcodeAPI\Exception\InvalidApiKeyException
+     */
     public function testRequestExceptionIsThrownWhenUsingAnInvalidApiKey()
     {
         $client = $this->createClient(
             $this->loadMockResponse('failed_list_with_invalid_api_key')
         );
 
-        try {
-            $client->getAddresses();
-
-            static::fail('Should not get to this point as an exception should have been thrown because the api client was supplied with an invalid API key');
-        } catch (RequestException $exception) {
-            if ($exception->getResponse() instanceof Response) {
-                static::assertTrue($exception->getResponse()->getStatusCode() === 401);
-            } else {
-                static::fail($exception->getMessage());
-            }
-        }
+        $client->getAddresses();
     }
 
     public function testListResourceReturnsAllAddressesWhenNoParamsAreSupplied()
@@ -103,7 +93,7 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \GuzzleHttp\Exception\RequestException
+     * @expectedException FH\PostcodeAPI\Exception\ServerErrorException
      */
     public function testClientThrowsExceptionWhenInvalidInputIsSupplied()
     {
@@ -121,7 +111,7 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
      */
     private function loadMockResponse($name)
     {
-        return file_get_contents(sprintf('%s/../../Mock/%s', __DIR__, $name));
+        return \GuzzleHttp\Psr7\parse_response(file_get_contents(__DIR__ . "/../../Mock/{$name}"));
     }
 
     /**
@@ -190,18 +180,11 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
      *
      * @return Client
      */
-    private function createClient($mockedResponses)
+    private function createClient(Response $mockedResponse)
     {
-        $someKey = 'SomeApiKey';
+        $httpClient = new \Http\Mock\Client();
+        $httpClient->addResponse($mockedResponse);
 
-        $httpClient = new HTTPClient();
-
-        $httpClient->getEmitter()->attach(
-            new Mock([
-                $mockedResponses
-            ])
-        );
-
-        return new Client($httpClient, $someKey);
+        return new Client($httpClient);
     }
 }

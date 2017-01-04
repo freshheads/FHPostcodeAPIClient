@@ -3,46 +3,43 @@
 namespace FH\PostcodeAPI;
 
 use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
-use GuzzleHttp\Client as HTTPClient;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
+use FH\PostcodeAPI\Exception\InvalidApiKeyException;
+use FH\PostcodeAPI\Exception\ServerErrorException;
 use GuzzleHttp\Psr7\Request;
+use Http\Client\HttpClient;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * Client library for postcodeapi.nu 2.0 web service.
  *
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
+ * @author Evert Harmeling <evert@freshheads.com>
  */
 class Client
 {
     const POSTCODES_SORT_DISTANCE = 'distance';
 
     /**
-     * @var string
-     */
-    private $uriScheme  = 'https://';
-
-    /**
      * @var null|string
      */
-    private $domain     = 'postcode-api.apiwise.nl';
+    private $url = 'https://postcode-api.apiwise.nl';
 
     /**
      * @var string
      */
-    private $version    = 'v2';
+    private $version = 'v2';
 
     /**
-     * @var HTTPClient
+     * @var HttpClient
      */
     private $httpClient;
 
 
-    public function __construct(ClientInterface $httpClient, $domain = null)
+    public function __construct(HttpClient $httpClient, $url = null)
     {
-        if (null !== $domain) {
-            $this->domain = $domain;
+        if (null !== $url) {
+            $this->url = $url;
         }
 
         $this->httpClient = $httpClient;
@@ -94,39 +91,28 @@ class Client
 
     /**
      * @param string $path
-     * @param array $queryParams
+     * @param array $params
      *
      * @return \stdClass
      *
      * @throws RequestException
      */
-    private function get($path, array $queryParams = array())
+    private function get($path, array $params = [])
     {
-        $request = $this->createHttpRequest('GET', sprintf('%s%s/%s%s', $this->uriScheme, $this->domain, $this->version, $path),
-            $queryParams
-        );
+        $request = $this->createHttpGetRequest($this->buildUrl($path), $params);
 
-        $response = $this->httpClient->send($request);
+        $response = $this->httpClient->sendRequest($request);
 
-        return $this->parseResponse($response);
+        return $this->parseResponse($response, $request);
     }
 
     /**
-     * @param ResponseInterface $response
-     *
-     * @return \stdClass
-     *
-     * @throws CouldNotParseResponseException
+     * @param string $path
+     * @return string
      */
-    private function parseResponse(ResponseInterface $response)
+    private function buildUrl($path)
     {
-        $out = json_decode((string) $response->getBody());
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new CouldNotParseResponseException('Could not parse response', $response);
-        }
-
-        return $out;
+        return sprintf('%s/%s%s', $this->url, $this->version, $path);
     }
 
     /**
@@ -136,10 +122,37 @@ class Client
      *
      * @return Request
      */
-    private function createHttpRequest($method, $url, array $queryParams = array())
+    private function createHttpGetRequest($url, array $params = [])
     {
-        $url = $url . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
+        $url .= (count($params) > 0 ? '?' . http_build_query($params, null, '&', PHP_QUERY_RFC3986) : '');
 
-        return new Request($method, $url);
+        return new Request('GET', $url);
+    }
+
+    /**
+     * @param ResponseInterface $response
+     *
+     * @return \stdClass
+     *
+     * @throws CouldNotParseResponseException
+     */
+    private function parseResponse(ResponseInterface $response, RequestInterface $request)
+    {
+        $result = json_decode((string) $response->getBody()->getContents());
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new CouldNotParseResponseException('Could not parse response', $response);
+        }
+
+        if (property_exists($result, 'error')) {
+            switch ($result->error) {
+                case 'API key is invalid.':
+                    throw new InvalidApiKeyException();
+                case 'An unknown server error occured.':
+                    throw ServerErrorException::fromRequest($request);
+            }
+        }
+
+        return $result;
     }
 }

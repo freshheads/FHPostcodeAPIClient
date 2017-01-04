@@ -14,7 +14,7 @@ by [Freshheads](https://www.freshheads.com) and will be maintained in sync with 
 Requirements
 ------------
 
-FHPostcodeAPIClient works with PHP 5.4.0 or up. This library is dependent on the awesome [Guzzle](http://guzzlephp.org/) HTTP client library. 
+FHPostcodeAPIClient works with PHP 5.5.0 or up. This library depends on the [HTTPPlug](http://httplug.io/), see http://docs.php-http.org/en/latest/httplug/introduction.html. 
 
 Installation
 ------------
@@ -36,7 +36,16 @@ require_once 'vendor/autoload.php';
 
 // initiate client
 $apiKey = 'replace_with_your_own_api_key';
-$client = new \FH\PostcodeAPI\Client(new \GuzzleHttp\Client(), $apiKey);
+// In this example we made use of the Guzzle6 as HTTPClient in combination with an HTTPPlug compatible adapter.
+$client = new \FH\PostcodeAPI\Client(
+    new Http\Adapter\Guzzle6\Client(
+        new GuzzleHttp\Client([
+            'headers' => [
+                'X-Api-Key' => $apiKey
+            ]
+        ])
+    )
+);
 
 // call endpoints
 $response = $client->getAddresses('5041EB', 21);
@@ -46,4 +55,38 @@ $response = $client->getAddress('0855200000061001');
 $response = $client->getPostcodes('51.566405', '5.077171');
 ```
 
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/freshheads/fhpostcodeapiclient/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+Note that to be able to run the example above you should have ran the following command, to have Guzzle6 and the Adapter available.
+
+```bash
+composer require php-http/guzzle6-adapter
+```
+
+Within Symfony project
+----------------------
+
+We recommend to use [Guzzle](https://github.com/guzzle/guzzle), to be able to use Guzzle in combination with the PostcodeApiClient you should also make use of the 
+[Guzzle6Adapter](https://github.com/php-http/guzzle6-adapter). By running the following command you automatically install Guzzle aswel.
+
+```bash
+composer require php-http/guzzle6-adapter
+```
+
+And add the following service definitions:
+```yaml
+project.http.guzzle.client:
+    class: GuzzleHttp\Client
+    arguments:
+        - { headers: { X-Api-Key: 'replace_with_your_own_api_key' } }
+
+project.http.adapter.guzzle.client:
+    class: Http\Adapter\Guzzle6\Client
+    arguments:
+        - '@project.http.guzzle.client'
+        
+project.client.postal_code:
+    class: FH\PostcodeAPI\Client
+    arguments:
+        - '@project.http.adapter.guzzle.client'
+```
+
+You should now be able use the `project.client.postal_code` service to make requests to the PostcodeAPI.
