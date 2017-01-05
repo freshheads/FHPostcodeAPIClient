@@ -3,51 +3,46 @@
 namespace FH\PostcodeAPI;
 
 use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
-use GuzzleHttp\Client as HTTPClient;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Message\Request;
-use GuzzleHttp\Message\ResponseInterface;
+use FH\PostcodeAPI\Exception\InvalidApiKeyException;
+use FH\PostcodeAPI\Exception\ServerErrorException;
+use GuzzleHttp\Psr7\Request;
+use Http\Client\HttpClient;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Client library for postcodeapi.nu 2.0 web service.
  *
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
+ * @author Evert Harmeling <evert@freshheads.com>
  */
 class Client
 {
-    /** @var string */
-    const BASE_URI = 'https://postcode-api.apiwise.nl';
+    const POSTCODES_SORT_DISTANCE = 'distance';
 
     /**
-     * @var HTTPClient
+     * @var null|string
+     */
+    private $url = 'https://postcode-api.apiwise.nl';
+
+    /**
+     * @var string
+     */
+    private $version = 'v2';
+
+    /**
+     * @var HttpClient
      */
     private $httpClient;
 
-    /**
-     * @param ClientInterface $httpClient
-     * @param string $apiKey Required API key for authenticating client
-     */
-    public function __construct(ClientInterface $httpClient, $apiKey)
-    {
-        $this->httpClient = $this->prepareClient($httpClient, $apiKey);
-    }
 
-    /**
-     * @param ClientInterface $client
-     * @param string $apiKey
-     *
-     * @return HTTPClient
-     */
-    private function prepareClient(ClientInterface $client, $apiKey)
+    public function __construct(HttpClient $httpClient, $url = null)
     {
-        if ($client->getDefaultOption('timeout') === null) {
-            $client->setDefaultOption('timeout', 5.0);
+        if (null !== $url) {
+            $this->url = $url;
         }
 
-        $client->setDefaultOption('headers/X-Api-Key', $apiKey);
-
-        return $client;
+        $this->httpClient = $httpClient;
     }
 
     /**
@@ -55,11 +50,11 @@ class Client
      * @param string|null $number
      * @param int $from
      *
-     * @return \StdClass
+     * @return \stdClass
      */
     public function getAddresses($postcode = null, $number = null, $from = 0)
     {
-        return $this->get('/v2/addresses/', [
+        return $this->get('/addresses/', [
             'postcode' => $postcode,
             'number' => $number,
             'from' => $from
@@ -69,61 +64,95 @@ class Client
     /**
      * @param string $id
      *
-     * @return \StdClass
+     * @return \stdClass
      */
     public function getAddress($id)
     {
-        return $this->get("/v2/addresses/{$id}");
+        return $this->get(sprintf('/addresses/%s', $id));
+    }
+
+    /**
+     * @param string $latitude
+     * @param string $longitude
+     * @param string $sort
+     *
+     * @return \stdClass
+     */
+    public function getPostcodesByCoordinates($latitude, $longitude, $sort = self::POSTCODES_SORT_DISTANCE)
+    {
+        return $this->get('/postcodes/', [
+            'coords' => [
+                'latitude' => $latitude,
+                'longitude' => $longitude
+            ],
+            'sort' => $sort
+        ]);
     }
 
     /**
      * @param string $path
-     * @param array $queryParams
+     * @param array $params
      *
-     * @return \StdClass
+     * @return \stdClass
      *
      * @throws RequestException
      */
-    private function get($path, array $queryParams = array())
+    private function get($path, array $params = [])
     {
-        $url = self::BASE_URI . $path;
+        $request = $this->createHttpGetRequest($this->buildUrl($path), $params);
 
-        $request = $this->createHttpRequest('GET', $url, $queryParams);
+        $response = $this->httpClient->sendRequest($request);
 
-        $response = $this->httpClient->send($request);
+        return $this->parseResponse($response, $request);
+    }
 
-        return $this->parseResponse($response);
+    /**
+     * @param string $path
+     * @return string
+     */
+    private function buildUrl($path)
+    {
+        return sprintf('%s/%s%s', $this->url, $this->version, $path);
+    }
+
+    /**
+     * @param string $method
+     * @param string $url
+     * @param array $queryParams
+     *
+     * @return Request
+     */
+    private function createHttpGetRequest($url, array $params = [])
+    {
+        $url .= (count($params) > 0 ? '?' . http_build_query($params, null, '&', PHP_QUERY_RFC3986) : '');
+
+        return new Request('GET', $url);
     }
 
     /**
      * @param ResponseInterface $response
      *
-     * @return \StdClass
+     * @return \stdClass
      *
      * @throws CouldNotParseResponseException
      */
-    private function parseResponse(ResponseInterface $response)
+    private function parseResponse(ResponseInterface $response, RequestInterface $request)
     {
-        $out = json_decode((string) $response->getBody());
+        $result = json_decode((string) $response->getBody()->getContents());
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new CouldNotParseResponseException('Could not parse resonse', $response);
+            throw new CouldNotParseResponseException('Could not parse response', $response);
         }
 
-        return $out;
-    }
+        if (property_exists($result, 'error')) {
+            switch ($result->error) {
+                case 'API key is invalid.':
+                    throw new InvalidApiKeyException();
+                case 'An unknown server error occured.':
+                    throw ServerErrorException::fromRequest($request);
+            }
+        }
 
-    /**
-     * @param string $method
-     * @param string $path
-     * @param array $queryParams
-     *
-     * @return Request
-     */
-    private function createHttpRequest($method, $path, array $queryParams = array())
-    {
-        $path = $path . (count($queryParams) > 0 ? '?' . http_build_query($queryParams) : '');
-
-        return $this->httpClient->createRequest($method, $path);
+        return $result;
     }
 }

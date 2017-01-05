@@ -3,10 +3,7 @@
 namespace FH\PostcodeAPI\Test;
 
 use FH\PostcodeAPI\Client;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Client AS HTTPClient;
-use GuzzleHttp\Message\Response;
-use GuzzleHttp\Subscriber\Mock;
+use GuzzleHttp\Psr7\Response;
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
@@ -34,23 +31,16 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     /** @var string */
     const FRESHHEADS_ADDRESS_ID = '0855200000061001';
 
+    /**
+     * @expectedException FH\PostcodeAPI\Exception\InvalidApiKeyException
+     */
     public function testRequestExceptionIsThrownWhenUsingAnInvalidApiKey()
     {
         $client = $this->createClient(
             $this->loadMockResponse('failed_list_with_invalid_api_key')
         );
 
-        try {
-            $client->getAddresses();
-
-            $this->fail('Should not get to this point as an exception should have been thrown because the api client was supplied with an invalid API key');
-        } catch (RequestException $exception) {
-            if ($exception->getResponse() instanceof Response) {
-                $this->assertTrue($exception->getResponse()->getStatusCode() === 401);
-            } else {
-                $this->fail($exception->getMessage());
-            }
-        }
+        $client->getAddresses();
     }
 
     public function testListResourceReturnsAllAddressesWhenNoParamsAreSupplied()
@@ -65,7 +55,7 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
 
         $addresses = $response->_embedded->addresses;
 
-        $this->assertTrue(count($addresses) > 0, 'Expecting that there are always addresses available');
+        static::assertGreaterThan(0, count($addresses), 'Expecting that there are always addresses available');
 
         $this->applyAddressFieldAreSetAndOfTheCorrectTypeAssertions($addresses[0]);
     }
@@ -82,7 +72,7 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
 
         $addresses = $response->_embedded->addresses;
 
-        $this->assertTrue(count($addresses) > 0, 'Expecting that there are always addresses available when no filters are applied');
+        static::assertGreaterThan(0, count($addresses), 'Expecting that there are always addresses available when no filters are applied');
 
         $firstAddress = $addresses[0];
 
@@ -99,12 +89,11 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
         $address = $client->getAddress(self::FRESHHEADS_ADDRESS_ID);
 
         $this->applyAddressFieldAreSetAndOfTheCorrectTypeAssertions($address);
-
         $this->applyIsFreshheadsAddressAssertions($address);
     }
 
     /**
-     * @expectedException \GuzzleHttp\Exception\RequestException
+     * @expectedException FH\PostcodeAPI\Exception\ServerErrorException
      */
     public function testClientThrowsExceptionWhenInvalidInputIsSupplied()
     {
@@ -122,64 +111,68 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
      */
     private function loadMockResponse($name)
     {
-        return file_get_contents(__DIR__ . "/../../Mock/{$name}");
+        return \GuzzleHttp\Psr7\parse_response(file_get_contents(__DIR__ . "/../../Mock/{$name}"));
     }
 
     /**
-     * @param \StdClass $address
+     * @param \stdClass $address
      */
-    private function applyIsFreshheadsAddressAssertions(\StdClass $address)
+    private function applyIsFreshheadsAddressAssertions(\stdClass $address)
     {
-        $this->assertSame(strtoupper($address->postcode), self::FRESHHEADS_POSTCODE, 'Incoming postcode did not match the expected postcode');
-        $this->assertSame((string)$address->number, (string)self::FRESHHEADS_NUMBER, 'Incoming number did not match the expected number');
-        $this->assertSame($address->city->label, self::FRESHHEADS_CITY, 'Incoming city did not match the expected city');
+        static::assertSame(strtoupper($address->postcode), self::FRESHHEADS_POSTCODE, 'Incoming postcode did not match the expected postcode');
+        static::assertSame((string)$address->number, (string)self::FRESHHEADS_NUMBER, 'Incoming number did not match the expected number');
+        static::assertSame($address->city->label, self::FRESHHEADS_CITY, 'Incoming city did not match the expected city');
 
         // use number_format number rounding to allow for minor changes between expected and actual value
-        $this->assertSame(
-            number_format($address->geo->center->wgs84->coordinates[0], 5),
+        $wgs84 = $address->geo->center->wgs84;
+
+        static::assertSame(
+            number_format($wgs84->coordinates[0], 5),
             number_format(self::FRESHHEADS_LONGITUDE, 5),
             'Incoming longitude did not match the expected value'
         );
-        $this->assertSame(
-            number_format($address->geo->center->wgs84->coordinates[1], 5),
+        static::assertSame(
+            number_format($wgs84->coordinates[1], 5),
             number_format(self::FRESHHEADS_LATITUDE, 5),
             'Incoming latitude did not match the expected value'
         );
     }
 
     /**
-     * @param \StdClass $response
+     * @param \stdClass $response
      */
-    private function applyAssertsToMakeSureAddressesArrayIsAvailableInResponse(\StdClass $response)
+    private function applyAssertsToMakeSureAddressesArrayIsAvailableInResponse(\stdClass $response)
     {
-        $this->assertTrue(isset($response->_embedded->addresses));
-        $this->assertTrue(is_array($response->_embedded->addresses));
+        static::assertTrue(isset($response->_embedded->addresses));
+        static::assertTrue(is_array($response->_embedded->addresses));
     }
 
     /**
      * @param \stdClass $address
      */
-    private function applyAddressFieldAreSetAndOfTheCorrectTypeAssertions(\StdClass $address)
+    private function applyAddressFieldAreSetAndOfTheCorrectTypeAssertions(\stdClass $address)
     {
         // only test the availability of the most import fields and their values
 
-        $this->assertTrue(isset($address->street), 'Incoming address did not have a street field');
-        $this->assertTrue(is_string($address->street), 'Incoming address did not have a street value of type string');
+        static::assertTrue(isset($address->street), 'Incoming address did not have a street field');
+        static::assertTrue(is_string($address->street), 'Incoming address did not have a street value of type string');
 
-        $this->assertTrue(isset($address->city->label), 'Incoming address did not have a city.label field');
-        $this->assertTrue(is_string($address->city->label), 'Incoming address did not have a city.label value of type string');
+        static::assertTrue(isset($address->city->label), 'Incoming address did not have a city.label field');
+        static::assertTrue(is_string($address->city->label), 'Incoming address did not have a city.label value of type string');
 
-        $this->assertTrue(isset($address->postcode), 'Incoming address did not have a postcode field');
-        $this->assertTrue(preg_match(self::POSTCODE_PATTERN, $address->postcode) === 1, 'Incoming address did not have a postcode value that matches the pattern: ' . self::POSTCODE_PATTERN);
+        static::assertTrue(isset($address->postcode), 'Incoming address did not have a postcode field');
+        static::assertTrue(preg_match(self::POSTCODE_PATTERN, $address->postcode) === 1, 'Incoming address did not have a postcode value that matches the pattern: ' . self::POSTCODE_PATTERN);
 
-        $this->assertTrue(isset($address->number), 'Incoming address did not have a number field');
-        $this->assertTrue(is_string($address->number) || is_numeric($address->number), 'Incoming address did not have a number field with type string');
+        static::assertTrue(isset($address->number), 'Incoming address did not have a number field');
+        static::assertTrue(is_string($address->number) || is_numeric($address->number), 'Incoming address did not have a number field with type string');
 
-        $this->assertTrue(isset($address->geo->center->wgs84->coordinates[0]), 'Incoming address did not have a longitude field');
-        $this->assertTrue(is_float($address->geo->center->wgs84->coordinates[0]), 'Incoming address did not have a longitude value of type float');
+        $wgs84 = $address->geo->center->wgs84;
 
-        $this->assertTrue(isset($address->geo->center->wgs84->coordinates[1]), 'Incoming address did not have a latitude field');
-        $this->assertTrue(is_float($address->geo->center->wgs84->coordinates[1]), 'Incoming address did not have a latitude value of type float');
+        static::assertTrue(isset($wgs84->coordinates[0]), 'Incoming address did not have a longitude field');
+        static::assertTrue(is_float($address->geo->center->wgs84->coordinates[0]), 'Incoming address did not have a longitude value of type float');
+
+        static::assertTrue(isset($wgs84->coordinates[1]), 'Incoming address did not have a latitude field');
+        static::assertTrue(is_float($address->geo->center->wgs84->coordinates[1]), 'Incoming address did not have a latitude value of type float');
     }
 
     /**
@@ -187,18 +180,11 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
      *
      * @return Client
      */
-    private function createClient($mockedResponses)
+    private function createClient(Response $mockedResponse)
     {
-        $someKey = 'SomeApiKey';
+        $httpClient = new \Http\Mock\Client();
+        $httpClient->addResponse($mockedResponse);
 
-        $httpClient = new HTTPClient();
-
-        $httpClient->getEmitter()->attach(
-            new Mock([
-                $mockedResponses
-            ])
-        );
-
-        return new Client($httpClient, $someKey);
+        return new Client($httpClient);
     }
 }

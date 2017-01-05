@@ -2,12 +2,12 @@
 
 namespace FH\PostcodeAPI\Exception;
 
-use GuzzleHttp\Message\ResponseInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
  */
-final class CouldNotParseResponseException extends \Exception
+final class CouldNotParseResponseException extends \Exception implements PostcodeApiExceptionInterface
 {
     /**
      * @var ResponseInterface
