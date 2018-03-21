@@ -23,7 +23,7 @@ class Client
     /**
      * @var null|string
      */
-    private $url = 'https://postcode-api.apiwise.nl';
+    private $url = 'https://api.postcodeapi.nu';
 
     /**
      * @var string
