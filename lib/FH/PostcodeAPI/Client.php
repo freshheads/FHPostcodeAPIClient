@@ -72,6 +72,16 @@ class Client
     }
 
     /**
+     * @param string $postcode
+     *
+     * @return \stdClass
+     */
+    public function getPostcodeDataByPostcode($postcode)
+    {
+        return $this->get('/postcodes/' . $postcode);
+    }
+
+    /**
      * @param string $latitude
      * @param string $longitude
      * @param string $sort
