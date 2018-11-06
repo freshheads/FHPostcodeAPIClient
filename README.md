@@ -3,7 +3,7 @@ FHPostcodeAPIClient
 
 [![Build Status](https://travis-ci.org/freshheads/FHPostcodeAPIClient.png?branch=master)](https://travis-ci.org/freshheads/FHPostcodeAPIClient)
 
-FHPostcodeAPIClient is a PHP client library for the PostcodeAPI.nu web service. This library is developed 
+FHPostcodeAPIClient is a PHP client library for the PostcodeAPI.nu web service. This library is developed
 by [Freshheads](https://www.freshheads.com) and will be maintained in sync with the web service itself.
 
 **Links:**
@@ -14,7 +14,7 @@ by [Freshheads](https://www.freshheads.com) and will be maintained in sync with 
 Requirements
 ------------
 
-FHPostcodeAPIClient works with PHP 5.5.0 or up. This library depends on the [HTTPPlug](http://httplug.io/), see http://docs.php-http.org/en/latest/httplug/introduction.html. 
+FHPostcodeAPIClient works with PHP 5.5.0 or up. This library depends on the [HTTPPlug](http://httplug.io/), see http://docs.php-http.org/en/latest/httplug/introduction.html.
 
 Installation
 ------------
@@ -50,6 +50,7 @@ $client = new \FH\PostcodeAPI\Client(
 // call endpoints
 $response = $client->getAddresses('5041EB', 21);
 $response = $client->getAddress('0855200000061001');
+$response = $client->getPostcode('5041EB');
 
 // Note that this call is only available with a premium account
 $response = $client->getPostcodes('51.566405', '5.077171');
@@ -64,7 +65,7 @@ composer require php-http/guzzle6-adapter
 Within Symfony project
 ----------------------
 
-We recommend to use [Guzzle](https://github.com/guzzle/guzzle), to be able to use Guzzle in combination with the PostcodeApiClient you should also make use of the 
+We recommend to use [Guzzle](https://github.com/guzzle/guzzle), to be able to use Guzzle in combination with the PostcodeApiClient you should also make use of the
 [Guzzle6Adapter](https://github.com/php-http/guzzle6-adapter). By running the following command you automatically install Guzzle aswel.
 
 ```bash
@@ -82,7 +83,7 @@ project.http.adapter.guzzle.client:
     class: Http\Adapter\Guzzle6\Client
     arguments:
         - '@project.http.guzzle.client'
-        
+
 project.client.postal_code:
     class: FH\PostcodeAPI\Client
     arguments:
