@@ -3,12 +3,19 @@
 namespace FH\PostcodeAPI\Test;
 
 use FH\PostcodeAPI\Client;
+use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
+use FH\PostcodeAPI\Exception\InvalidApiKeyException;
+use FH\PostcodeAPI\Exception\InvalidUrlException;
+use FH\PostcodeAPI\Exception\ServerErrorException;
 use GuzzleHttp\Psr7\Response;
+use Http\Client\Exception;
+use PHPUnit_Framework_TestCase;
+use stdClass;
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
  */
-final class ClientTest extends \PHPUnit_Framework_TestCase
+final class ClientTest extends PHPUnit_Framework_TestCase
 {
     /** @var string */
     const POSTCODE_PATTERN = '/^[\d]{4}[\w]{2}$/i';
@@ -31,8 +38,16 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     /** @var string */
     const FRESHHEADS_ADDRESS_ID = '0855200000061001';
 
+    /** @var string  */
+    const FRESHHEADS_VALID_URL = 'https://api.postcodeapi.nu/v2/addresses/?postcode=4904ZR&from%5Bpostcode%5D=4904ZR&from%5Bid%5D=0826200000012452&from%5Bnumber%5D=95';
+
     /**
      * @expectedException FH\PostcodeAPI\Exception\InvalidApiKeyException
+     *
+     * @throws CouldNotParseResponseException
+     * @throws Exception
+     * @throws InvalidApiKeyException
+     * @throws ServerErrorException
      */
     public function testRequestExceptionIsThrownWhenUsingAnInvalidApiKey()
     {
@@ -43,6 +58,12 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
         $client->getAddresses();
     }
 
+    /**
+     * @throws InvalidApiKeyException
+     * @throws ServerErrorException
+     * @throws CouldNotParseResponseException
+     * @throws Exception
+     */
     public function testListResourceReturnsAllAddressesWhenNoParamsAreSupplied()
     {
         $client = $this->createClient(
@@ -60,6 +81,12 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
         $this->applyAddressFieldAreSetAndOfTheCorrectTypeAssertions($addresses[0]);
     }
 
+    /**
+     * @throws CouldNotParseResponseException
+     * @throws Exception
+     * @throws InvalidApiKeyException
+     * @throws ServerErrorException
+     */
     public function testListResourceReturnsExpectedAddressWhenPostcodeAndNumberAreSupplied()
     {
         $client = $this->createClient(
@@ -80,6 +107,12 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
         $this->applyIsFreshheadsAddressAssertions($firstAddress);
     }
 
+    /**
+     * @throws CouldNotParseResponseException
+     * @throws Exception
+     * @throws InvalidApiKeyException
+     * @throws ServerErrorException
+     */
     public function testExpectedAddressInformationIsReturnedFromDetailResource()
     {
         $client = $this->createClient(
@@ -94,14 +127,63 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException FH\PostcodeAPI\Exception\ServerErrorException
+     *
+     * @throws CouldNotParseResponseException
+     * @throws Exception
+     * @throws InvalidApiKeyException
+     * @throws ServerErrorException
      */
-    public function testClientThrowsExceptionWhenInvalidInputIsSupplied()
+    public function testExpectedAddress()
     {
         $client = $this->createClient(
             $this->loadMockResponse('failed_list_with_invalid_postalcode_and_number')
         );
 
         $client->getAddresses('invalid_postcode', 'invalid_number');
+    }
+
+    /**
+     * @dataProvider invalidUrlsProvider
+     * @expectedException FH\PostcodeAPI\Exception\InvalidUrlException
+     *
+     * @throws CouldNotParseResponseException
+     * @throws Exception
+     * @throws InvalidApiKeyException
+     * @throws ServerErrorException
+     * @throws InvalidUrlException
+     */
+    public function testClientThrowsExceptionWhenInvalidUrlIsSupplied($invalidUrl)
+    {
+        $client = $this->createClient(
+            $this->loadMockResponse('successful_list_without_filtering')
+        );
+
+        $client->request($invalidUrl);
+    }
+
+    /**
+     * @throws CouldNotParseResponseException
+     * @throws Exception
+     * @throws InvalidApiKeyException
+     * @throws ServerErrorException
+     * @throws InvalidUrlException
+     */
+    public function testExpectedNoExceptionsWhenValidNextLinkIsSupplied()
+    {
+        $client = $this->createClient(
+            $this->loadMockResponse('successful_list_without_filtering')
+        );
+
+        $client->request(self::FRESHHEADS_VALID_URL);
+    }
+
+    public function invalidUrlsProvider()
+    {
+        return [
+            ['invalid_url'],
+            ['https://api.postcodeapi.com/invalid-host'],
+            ['http://api.postcodeapi.nu/invalid-schema'],
+        ];
     }
 
     /**
@@ -115,9 +197,9 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param \stdClass $address
+     * @param stdClass $address
      */
-    private function applyIsFreshheadsAddressAssertions(\stdClass $address)
+    private function applyIsFreshheadsAddressAssertions(stdClass $address)
     {
         static::assertSame(strtoupper($address->postcode), self::FRESHHEADS_POSTCODE, 'Incoming postcode did not match the expected postcode');
         static::assertSame((string)$address->number, (string)self::FRESHHEADS_NUMBER, 'Incoming number did not match the expected number');
@@ -139,18 +221,18 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param \stdClass $response
+     * @param stdClass $response
      */
-    private function applyAssertsToMakeSureAddressesArrayIsAvailableInResponse(\stdClass $response)
+    private function applyAssertsToMakeSureAddressesArrayIsAvailableInResponse(stdClass $response)
     {
         static::assertTrue(isset($response->_embedded->addresses));
         static::assertTrue(is_array($response->_embedded->addresses));
     }
 
     /**
-     * @param \stdClass $address
+     * @param stdClass $address
      */
-    private function applyAddressFieldAreSetAndOfTheCorrectTypeAssertions(\stdClass $address)
+    private function applyAddressFieldAreSetAndOfTheCorrectTypeAssertions(stdClass $address)
     {
         // only test the availability of the most import fields and their values
 
@@ -176,8 +258,7 @@ final class ClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param string $mockedResponses
-     *
+     * @param Response|string $mockedResponse
      * @return Client
      */
     private function createClient(Response $mockedResponse)
