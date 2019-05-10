@@ -15,7 +15,7 @@ class InvalidUrlException extends \Exception implements PostcodeApiExceptionInte
     /**
      * @param string $url
      */
-    public function __construct(string $url)
+    public function __construct($url)
     {
         parent::__construct("Invalid url provided '$url'");
 

@@ -213,7 +213,7 @@ class Client
      * @param string $url
      * @throws InvalidUrlException
      */
-    private function validateUrl(string $url)
+    private function validateUrl($url)
     {
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {
             throw new InvalidUrlException($url);
