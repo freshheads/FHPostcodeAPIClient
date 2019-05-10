@@ -7,7 +7,6 @@ use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
 use FH\PostcodeAPI\Exception\InvalidApiKeyException;
 use FH\PostcodeAPI\Exception\InvalidUrlException;
 use FH\PostcodeAPI\Exception\ServerErrorException;
-use function GuzzleHttp\Psr7\parse_response;
 use GuzzleHttp\Psr7\Response;
 use Http\Client\Exception;
 use PHPUnit_Framework_TestCase;
@@ -194,7 +193,7 @@ final class ClientTest extends PHPUnit_Framework_TestCase
      */
     private function loadMockResponse($name)
     {
-        return parse_response(file_get_contents(__DIR__ . "/../../Mock/{$name}"));
+        return \GuzzleHttp\Psr7\parse_response(file_get_contents(__DIR__ . "/../../Mock/{$name}"));
     }
 
     /**
