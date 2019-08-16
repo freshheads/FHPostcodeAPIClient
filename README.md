@@ -14,7 +14,7 @@ by [Freshheads](https://www.freshheads.com) and will be maintained in sync with 
 Requirements
 ------------
 
-FHPostcodeAPIClient works with PHP 5.5.0 or up. This library depends on the [HTTPPlug](http://httplug.io/), see http://docs.php-http.org/en/latest/httplug/introduction.html.
+FHPostcodeAPIClient works with PHP 7.1 and up. This library depends on the [HTTPPlug](http://httplug.io/), see http://docs.php-http.org/en/latest/httplug/introduction.html.
 
 Installation
 ------------
@@ -72,22 +72,25 @@ We recommend to use [Guzzle](https://github.com/guzzle/guzzle), to be able to us
 composer require php-http/guzzle6-adapter
 ```
 
-And add the following service definitions:
+And add the following service definitions (usable in Symfony ^3.4):
 ```yaml
-project.http.guzzle.client:
-    class: GuzzleHttp\Client
-    arguments:
-        - { headers: { X-Api-Key: 'replace_with_your_own_api_key' } }
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
 
-project.http.adapter.guzzle.client:
-    class: Http\Adapter\Guzzle6\Client
-    arguments:
-        - '@project.http.guzzle.client'
-
-project.client.postal_code:
-    class: FH\PostcodeAPI\Client
-    arguments:
-        - '@project.http.adapter.guzzle.client'
+    project.http.guzzle.client:
+        class: GuzzleHttp\Client
+        arguments:
+            - { headers: { X-Api-Key: 'replace_with_your_own_api_key_or_variable' } }
+    
+    project.http.adapter.guzzle.client:
+        class: Http\Adapter\Guzzle6\Client
+        arguments:
+            $client: '@project.http.guzzle.client'
+    
+    FH\PostcodeAPI\Client:
+        $httpClient: '@project.http.adapter.guzzle.client'
 ```
 
 You should now be able use the `project.client.postal_code` service to make requests to the PostcodeAPI.
