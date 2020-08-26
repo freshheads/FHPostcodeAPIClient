@@ -6,7 +6,8 @@ use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
 use FH\PostcodeAPI\Exception\InvalidApiKeyException;
 use FH\PostcodeAPI\Exception\ServerErrorException;
 use GuzzleHttp\Psr7\Request;
-use Http\Client\HttpClient;
+use Http\Client\Exception\RequestException;
+use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -31,12 +32,12 @@ class Client
     private $version = 'v2';
 
     /**
-     * @var HttpClient
+     * @var ClientInterface
      */
     private $httpClient;
 
 
-    public function __construct(HttpClient $httpClient, $url = null)
+    public function __construct(ClientInterface $httpClient, $url = null)
     {
         if (null !== $url) {
             $this->url = $url;
