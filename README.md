@@ -11,11 +11,6 @@ by [Freshheads](https://www.freshheads.com) and will be maintained in sync with 
 * [More information](https://www.postcodeapi.nu)
 * [API documentation](https://swaggerhub.com/api/apiwise/postcode-api)
 
-Requirements
-------------
-
-FHPostcodeAPIClient works with PHP 7.1 and up. This library depends on the [HTTPPlug](http://httplug.io/), see http://docs.php-http.org/en/latest/httplug/introduction.html.
-
 Installation
 ------------
 
@@ -36,15 +31,13 @@ require_once 'vendor/autoload.php';
 
 // initiate client
 $apiKey = 'replace_with_your_own_api_key';
-// In this example we made use of the Guzzle6 as HTTPClient in combination with an HTTPPlug compatible adapter.
+// In this example we made use of the Guzzle as HTTPClient.
 $client = new \FH\PostcodeAPI\Client(
-    new Http\Adapter\Guzzle6\Client(
-        new GuzzleHttp\Client([
-            'headers' => [
-                'X-Api-Key' => $apiKey
-            ]
-        ])
-    )
+    new GuzzleHttp\Client([
+        'headers' => [
+            'X-Api-Key' => $apiKey
+        ]
+    ])
 );
 
 // call endpoints
@@ -62,11 +55,31 @@ Note that to be able to run the example above you should have ran the following 
 composer require php-http/guzzle6-adapter
 ```
 
-Within Symfony project
+Within a Symfony project
 ----------------------
 
-We recommend to use [Guzzle](https://github.com/guzzle/guzzle), to be able to use Guzzle in combination with the PostcodeApiClient you should also make use of the
-[Guzzle6Adapter](https://github.com/php-http/guzzle6-adapter). By running the following command you automatically install Guzzle aswel.
+We recommend to use [Guzzle](https://github.com/guzzle/guzzle), to be able to use Guzzle in combination with the PostcodeApiClient.
+Following definition is used with an implementation of `Guzzle 7`.
+
+```yaml
+_defaults:
+        autowire: true
+        autoconfigure: true
+
+    project.http.client.postal_code:
+        class: GuzzleHttp\Client
+        bind:
+            $config: { headers: { X-Api-Key: '%postcode_api_nu.key%' } }
+
+    FH\PostcodeAPI\Client:
+        $httpClient: '@project.http.client.postal_code'
+```
+ 
+You should now be able use the `FH\PostcodeAPI\Client` service to make requests to the PostcodeAPI.
+
+#### Guzzle 6 
+To make use of `Guzzle 6`, you should also make use of the
+[Guzzle6Adapter](https://github.com/php-http/guzzle6-adapter). By running the following command you automatically install Guzzle as well.
 
 ```bash
 composer require php-http/guzzle6-adapter
@@ -92,5 +105,3 @@ services:
     FH\PostcodeAPI\Client:
         $httpClient: '@project.http.adapter.guzzle.client'
 ```
-
-You should now be able use the `project.client.postal_code` service to make requests to the PostcodeAPI.
