@@ -25,10 +25,7 @@ final class CouldNotParseResponseException extends \Exception implements Postcod
         $this->response = $response;
     }
 
-    /**
-     * @return ResponseInterface
-     */
-    public function getResponse()
+    public function getResponse(): ResponseInterface
     {
         return $this->response;
     }
