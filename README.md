@@ -49,12 +49,6 @@ $response = $client->getPostcode('5041EB');
 $response = $client->getPostcodes('51.566405', '5.077171');
 ```
 
-Note that to be able to run the example above you should have ran the following command, to have Guzzle6 and the Adapter available.
-
-```bash
-composer require php-http/guzzle6-adapter
-```
-
 Within a Symfony project
 ----------------------
 

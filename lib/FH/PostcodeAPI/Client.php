@@ -6,12 +6,10 @@ use FH\PostcodeAPI\Exception\CouldNotParseResponseException;
 use FH\PostcodeAPI\Exception\InvalidApiKeyException;
 use FH\PostcodeAPI\Exception\ServerErrorException;
 use GuzzleHttp\Psr7\Request;
-use Http\Client\Exception\RequestException;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-
-use function sprintf;
 
 /**
  * Client library for postcodeapi.nu 2.0 web service.
@@ -105,7 +103,7 @@ class Client
     /**
      * @return \stdClass
      *
-     * @throws RequestException
+     * @throws ClientExceptionInterface
      */
     private function get(string $path, array $params = [])
     {
@@ -116,7 +114,7 @@ class Client
         return $this->parseResponse($response, $request);
     }
 
-    private function buildUrl(?string $path): string
+    private function buildUrl(string $path): string
     {
         return sprintf('%s/%s%s', $this->url, $this->version, $path);
     }
