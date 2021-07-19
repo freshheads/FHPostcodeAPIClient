@@ -5,13 +5,12 @@ namespace FH\PostcodeAPI\Test;
 use FH\PostcodeAPI\Client;
 use FH\PostcodeAPI\Exception\InvalidApiKeyException;
 use FH\PostcodeAPI\Exception\ServerErrorException;
+use GuzzleHttp\Psr7\Message;
 use GuzzleHttp\Psr7\Response;
 use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use stdClass;
-
-use function GuzzleHttp\Psr7\parse_response;
 
 /**
  * @author Gijs Nieuwenhuis <gijs.nieuwenhuis@freshheads.com>
@@ -99,7 +98,7 @@ final class ClientTest extends TestCase
 
     private function loadMockResponse(string $name): Response
     {
-        return parse_response(file_get_contents(__DIR__ . "/../../Mock/{$name}"));
+        return Message::parseResponse(file_get_contents(__DIR__ . "/../../Mock/{$name}"));
     }
 
     private function applyIsFreshheadsAddressAssertions(stdClass $address): void
