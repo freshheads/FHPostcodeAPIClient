@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 4.1.1
+
+* Changed PHP version constraint to >=7.4
+
 ## 4.0.1
 
 ### Added
