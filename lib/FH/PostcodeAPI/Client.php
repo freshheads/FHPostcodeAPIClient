@@ -121,7 +121,7 @@ class Client
 
     private function createHttpGetRequest(string $url, array $params = []): Request
     {
-        $url .= (count($params) > 0 ? '?' . http_build_query($params, null, '&', PHP_QUERY_RFC3986) : '');
+        $url .= (count($params) > 0 ? '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986) : '');
 
         return new Request('GET', $url);
     }
