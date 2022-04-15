@@ -3,6 +3,7 @@
 ## 4.1.1
 
 * Changed PHP version constraint to >=7.4
+* Fixed http_build_query() deprecation warning: Passing null to parameter #2 ($numeric_prefix) of type string is deprecated
 
 ## 4.0.1
 
